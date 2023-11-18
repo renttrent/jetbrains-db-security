@@ -7,7 +7,10 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.tree.IElementType
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
+import java.util.stream.Collectors
 
 class SqlInjectionDetectionAction : AnAction() {
 
@@ -23,16 +26,20 @@ class SqlInjectionDetectionAction : AnAction() {
 
     private fun detectSqlInjection(file: PsiFile) {
         val allElements = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
-        for (element in allElements) {
+        val elementsWithNoExpression = allElements.stream().filter {
+            it.elementType.toString().contains("STRING_LITERAL_EXPRESSION") && !it.parent.elementType.toString().contains("BINARY_EXPRESSION")
+        }.collect(Collectors.toList())
+
+        val elementsWithExpression = allElements.stream().filter {
+            it.elementType.toString().contains("STRING_LITERAL_EXPRESSION") && it.parent.elementType.toString().contains("BINARY_EXPRESSION")
+        }.collect(Collectors.toList())
+
+        for (element in elementsWithNoExpression) {
             println(element)
-            // Check if the element is a string literal or a language-specific literal expression
-            if (isStringLiteral(element)) {
-                val value = extractStringValue(element)
-                // Perform your SQL injection detection logic with the extracted string value
-                if (isSusceptibleToSqlInjection(value)) {
-                    reportVulnerability(element)
-                }
-            }
+        }
+
+        for (element in elementsWithExpression) {
+            println(element)
         }
     }
 

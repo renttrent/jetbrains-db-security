@@ -11,7 +11,7 @@
 
         <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction"
                 class="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction" text="TestAction">
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt P"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift P"/>
         </action>
     </actions>
 
