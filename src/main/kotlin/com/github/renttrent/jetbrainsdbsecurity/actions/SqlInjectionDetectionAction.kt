@@ -28,8 +28,8 @@ class SqlInjectionDetectionAction : AnAction() {
         }
     }
 
-    public fun parseDocument(project: Project, document: Document) {
-        val psiFile: PsiFile? = PsiDocumentManager.getInstance(project).getPsiFile(document);
+    fun parseDocument(project: Project, document: Document) {
+        val psiFile: PsiFile? = PsiDocumentManager.getInstance(project).getPsiFile(document)
         psiFile?.let { file ->
             detectSqlInjection(file)
         }
@@ -47,7 +47,7 @@ class SqlInjectionDetectionAction : AnAction() {
 
         for (element in elementsWithNoExpression) {
             println(element)
-            highlightElement(file, element);
+            highlightElement(file, element)
         }
 
         for (element in elementsWithExpression) {
@@ -56,20 +56,20 @@ class SqlInjectionDetectionAction : AnAction() {
     }
 
     private fun highlightElement(file: PsiFile, element: PsiElement){
-        val elementOffset = element.textOffset;
+        val elementOffset = element.textOffset
 
         val containingFile = element.containingFile
 
         val project: Project = containingFile.project
         val psiDocumentManager = PsiDocumentManager.getInstance(project)
-        val document = psiDocumentManager.getDocument(file) ?: return;
-        val markupModel = DocumentMarkupModel.forDocument(document, project, true);
+        val document = psiDocumentManager.getDocument(file) ?: return
+        val markupModel = DocumentMarkupModel.forDocument(document, project, true)
 
-        val lineNumber = document.getLineNumber(elementOffset);
-        val lineStartOffset = document.getLineStartOffset(lineNumber);
-        val columnNumber = element.textOffset - lineStartOffset;
+        val lineNumber = document.getLineNumber(elementOffset)
+        val lineStartOffset = document.getLineStartOffset(lineNumber)
+        //val columnNumber = element.textOffset - lineStartOffset
 
-        val rangeHighlighter = markupModel.addRangeHighlighter(
+        markupModel.addRangeHighlighter(
                 elementOffset,
                 elementOffset + element.textLength,
                 HighlighterLayer.WARNING,
