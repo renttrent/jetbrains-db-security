@@ -72,26 +72,4 @@ class SqlInjectionDetectionAction : AnAction() {
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
-
-    private fun isStringLiteral(element: PsiElement): Boolean {
-        // Replace with the actual condition to check for a string literal in your target language
-        // For example, in Kotlin, you might check if it's an instance of KtStringTemplateExpression
-        return false
-    }
-
-    private fun extractStringValue(element: PsiElement): String {
-        // Implement logic to extract the string value from the element
-        // This will depend on the specific PSI structure of the language you're analyzing
-        return ""
-    }
-
-    private fun isSusceptibleToSqlInjection(value: String): Boolean {
-        // Implement your SQL injection detection logic here
-        // This is where you would look for concatenations, or perhaps use of variables in constructing a SQL query
-        return false
-    }
-
-    private fun reportVulnerability(element: PsiElement) {
-        // Reporting logic goes here
-    }
 }
