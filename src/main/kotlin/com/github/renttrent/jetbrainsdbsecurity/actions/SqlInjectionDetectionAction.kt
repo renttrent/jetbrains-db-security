@@ -2,6 +2,7 @@ package com.github.renttrent.jetbrainsdbsecurity.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.editor.markup.EffectType
@@ -23,10 +24,14 @@ class SqlInjectionDetectionAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val editor: Editor? = event.getData(com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR)
         if (editor != null) {
-            val psiFile: PsiFile? = PsiDocumentManager.getInstance(event.project!!).getPsiFile(editor.document);
-            psiFile?.let { file ->
-                detectSqlInjection(file)
-            }
+            parseDocument(editor.project!!, editor.document)
+        }
+    }
+
+    public fun parseDocument(project: Project, document: Document) {
+        val psiFile: PsiFile? = PsiDocumentManager.getInstance(project).getPsiFile(document);
+        psiFile?.let { file ->
+            detectSqlInjection(file)
         }
     }
 
@@ -72,4 +77,5 @@ class SqlInjectionDetectionAction : AnAction() {
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
+
 }
