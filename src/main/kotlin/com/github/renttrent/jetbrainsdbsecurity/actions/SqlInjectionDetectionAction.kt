@@ -35,7 +35,7 @@ class SqlInjectionDetectionAction : AnAction() {
         }
     }
 
-    private fun detectSqlInjection(file: PsiFile) {
+    fun detectSqlInjection(file: PsiFile) {
         val allElements = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
         val elementsWithNoExpression = allElements.stream().filter {
             it.elementType.toString().contains("STRING_LITERAL_EXPRESSION") && !it.parent.elementType.toString().contains("BINARY_EXPRESSION")

@@ -12,10 +12,10 @@
     </extensions>
 
     <actions>
-
-        <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction"
-                class="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction" text="TestAction">
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift P"/>
+        <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAllFilesAction"
+                class="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAllFilesAction"
+                text="SqlInjectionDetectionAllFilesAction">
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt K"/>
         </action>
     </actions>
 
