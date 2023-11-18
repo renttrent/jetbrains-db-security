@@ -1,8 +1,8 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.renttrent.jetbrainsdbsecurity</id>
-    <name>jetbrains-db-security Template</name>
-    <vendor>renttrent</vendor>
+    <name>Hackatum-DB-Security 2023</name>
+    <vendor>JetBrains DB Security</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
