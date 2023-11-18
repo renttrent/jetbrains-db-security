@@ -90,7 +90,7 @@ tasks {
                 subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
         }
-
+java
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
         changeNotes = properties("pluginVersion").map { pluginVersion ->

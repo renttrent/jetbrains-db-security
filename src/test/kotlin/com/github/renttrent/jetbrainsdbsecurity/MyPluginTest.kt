@@ -1,5 +1,6 @@
 package com.github.renttrent.jetbrainsdbsecurity
 
+import com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction
 import com.intellij.ide.highlighter.XmlFileType
 import com.intellij.openapi.components.service
 import com.intellij.psi.xml.XmlFile
@@ -33,6 +34,10 @@ class MyPluginTest : BasePlatformTestCase() {
         val projectService = project.service<MyProjectService>()
 
         assertNotSame(projectService.getRandomNumber(), projectService.getRandomNumber())
+    }
+
+    fun testPSITreeStructure(){
+        
     }
 
     override fun getTestDataPath() = "src/test/testData/rename"

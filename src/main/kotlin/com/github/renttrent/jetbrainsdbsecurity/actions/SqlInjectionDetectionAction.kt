@@ -14,7 +14,7 @@ class SqlInjectionDetectionAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val editor: Editor? = event.getData(com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR)
         if (editor != null) {
-            val psiFile: PsiFile? = PsiDocumentManager.getInstance(event.project!!).getPsiFile(editor.document)
+            val psiFile: PsiFile? = PsiDocumentManager.getInstance(event.project!!).getPsiFile(editor.document);
             psiFile?.let { file ->
                 detectSqlInjection(file)
             }
@@ -24,6 +24,7 @@ class SqlInjectionDetectionAction : AnAction() {
     private fun detectSqlInjection(file: PsiFile) {
         val allElements = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
         for (element in allElements) {
+            println(element)
             // Check if the element is a string literal or a language-specific literal expression
             if (isStringLiteral(element)) {
                 val value = extractStringValue(element)

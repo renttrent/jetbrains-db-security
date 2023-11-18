@@ -26,6 +26,8 @@ class MyProjectService(project: Project) {
         val actionManager = ActionManager.getInstance()
         val action = actionManager.getAction("SqlInjectionDetectionAction")
 
+
+
 //        val event = AnActionEvent(null, DataManager.getInstance().getDataContext(), ActionPlaces.UNKNOWN, Presentation(), actionManager, 0)
     }
 }
