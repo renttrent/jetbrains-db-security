@@ -12,6 +12,14 @@
         <toolWindow factoryClass="com.github.renttrent.jetbrainsdbsecurity.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
     </extensions>
 
+    <actions>`
+        <group id="SqlDetection" text="Sql Detection" description="Actions related to detecting SQL" popup="true">
+            <action id="SqlInjectionDetectionAction" class="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction" description="Detects SQL injection vulnerabilities">
+                <keyboard-shortcut first-keystroke="ctrl alt P" keymap="$default" />
+            </action>
+        </group>
+    </actions>
+
     <applicationListeners>
         <listener class="com.github.renttrent.jetbrainsdbsecurity.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
     </applicationListeners>
