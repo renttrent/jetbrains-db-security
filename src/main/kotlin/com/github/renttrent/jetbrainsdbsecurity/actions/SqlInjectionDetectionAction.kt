@@ -15,8 +15,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.ui.JBColor
-import io.ktor.http.*
-import java.awt.Color
 import java.awt.Font
 import java.util.stream.Collectors
 

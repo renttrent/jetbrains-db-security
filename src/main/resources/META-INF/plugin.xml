@@ -7,6 +7,10 @@
     <depends>com.intellij.modules.python-core-capable</depends>
     <depends>com.intellij.modules.platform</depends>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <fileDocumentManagerListener implementation="com.github.renttrent.jetbrainsdbsecurity.listeners.SaveListener"/>
+    </extensions>
+
     <actions>
 
         <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction"
