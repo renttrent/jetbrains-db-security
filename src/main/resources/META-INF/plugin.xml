@@ -7,13 +7,7 @@
     <depends>com.intellij.modules.python-core-capable</depends>
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.renttrent.jetbrainsdbsecurity.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-    </extensions>
-
-    <actions>`
+    <actions>
 
         <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction"
                 class="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAction" text="TestAction">
@@ -21,7 +15,5 @@
         </action>
     </actions>
 
-    <applicationListeners>
-        <listener class="com.github.renttrent.jetbrainsdbsecurity.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
+
 </idea-plugin>

@@ -19,15 +19,4 @@ class MyProjectService(project: Project) {
         thisLogger().info(MyBundle.message("projectService", project.name))
         thisLogger().warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.")
     }
-
-    fun getRandomNumber() = (1..100).random()
-
-    fun triggerSqlInjectionDetectionAction(project: Project) {
-        val actionManager = ActionManager.getInstance()
-        val action = actionManager.getAction("SqlInjectionDetectionAction")
-
-
-
-//        val event = AnActionEvent(null, DataManager.getInstance().getDataContext(), ActionPlaces.UNKNOWN, Presentation(), actionManager, 0)
-    }
 }
