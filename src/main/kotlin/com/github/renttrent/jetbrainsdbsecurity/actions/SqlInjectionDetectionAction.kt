@@ -66,7 +66,7 @@ class SqlInjectionDetectionAction : AnAction() {
         val markupModel = DocumentMarkupModel.forDocument(document, project, true)
 
         val lineNumber = document.getLineNumber(elementOffset)
-        val lineStartOffset = document.getLineStartOffset(lineNumber)
+        //val lineStartOffset = document.getLineStartOffset(lineNumber)
         //val columnNumber = element.textOffset - lineStartOffset
 
         markupModel.addRangeHighlighter(
