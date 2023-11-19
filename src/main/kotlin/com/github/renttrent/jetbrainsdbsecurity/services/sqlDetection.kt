@@ -14,12 +14,12 @@ fun isValidSqlNaive(input: String): Boolean {
 }
 
 fun isSqlVulnerable(input: String): WarningSeverity {
-    val valuePattern = """(?:[=<>!]+|\b(?:LIKE|IN|BETWEEN|IS)\b)\s*(?:\{\}|\%.+?)""".toRegex()
+    val valuePattern = """((<)|(>)|(<=)|(>=)|(=)|(==)|(!=)|(<>)|(IS)|(IS NOT)|(I?LIKE)|(~))\s+(%|(\{\w*\}))""".toRegex()
     val bracesPattern = """(?<!\\)\{.*?\}""".toRegex()
-    val percentagePattern = """(?<!'[^']*%'[^']*)%(?!'[^']*')""".toRegex()
+//    val percentagePattern = """(?<!'[^']*%'[^']*)%(?!'[^']*')""".toRegex() not yet working
 
     if (valuePattern.matches(input.trim())) return WarningSeverity.STRONG
-    if (bracesPattern.matches(input.trim()) || percentagePattern.matches(input.trim())) return WarningSeverity.WEAK
+    if (bracesPattern.matches(input.trim())) return WarningSeverity.WEAK
     return WarningSeverity.OK
 
 }
