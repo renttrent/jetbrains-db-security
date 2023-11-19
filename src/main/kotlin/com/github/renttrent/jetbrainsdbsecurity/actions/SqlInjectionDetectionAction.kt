@@ -70,7 +70,7 @@ class SqlInjectionDetectionAction : AnAction() {
                 if (!validSql) continue
                 val sqlVulnerable = isSqlVulnerable(concatQuery)
                 if(sqlVulnerable != WarningSeverity.OK){
-                    highlightElement(file,elem)
+                    highlightElement(file, elem, sqlVulnerable)
                 }
             }
         }
@@ -159,7 +159,7 @@ class SqlInjectionDetectionAction : AnAction() {
         return list
     }
 
-    private fun highlightElement(file: PsiFile, element: PsiElement){
+    private fun highlightElement(file: PsiFile, element: PsiElement, severity: WarningSeverity){
         val elementOffset = element.textOffset
 
         val containingFile = element.containingFile
@@ -173,7 +173,13 @@ class SqlInjectionDetectionAction : AnAction() {
         val lineStartOffset = document.getLineStartOffset(lineNumber)
         val columnNumber = element.textOffset - lineStartOffset
 
-        showNotification(project, "WARNING!", "(${lineNumber}, ${columnNumber}) Element - " + element.text.toString() + " not valid form of query")
+
+        var warning = ""
+
+        if (severity === WarningSeverity.WEAK) warning = "WEAK WARNING"
+        if (severity === WarningSeverity.STRONG) warning = "STRONG WARNING"
+
+        showNotification(project, warning, "(${lineNumber}, ${columnNumber}) Element - " + element.text.toString() + " not valid form of query")
         markupModel.addRangeHighlighter(
                 elementOffset,
                 elementOffset + element.textLength,
