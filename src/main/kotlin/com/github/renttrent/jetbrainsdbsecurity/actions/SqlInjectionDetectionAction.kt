@@ -1,6 +1,5 @@
 package com.github.renttrent.jetbrainsdbsecurity.actions
 
-import com.github.renttrent.jetbrainsdbsecurity.services.SQLParserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Document
@@ -17,9 +16,12 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.ui.JBColor
+import com.intellij.ui.render.LabelBasedRenderer
 import java.awt.Font
 import java.util.Dictionary
 import java.util.stream.Collectors
+import javax.lang.model.element.Element
+
 class SqlInjectionDetectionAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val editor: Editor? = event.getData(com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR)
@@ -59,13 +61,16 @@ class SqlInjectionDetectionAction : AnAction() {
 
         val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
 
-        val dict : Dictionary<PsiElement, List<String>>
-
         //BinaryExpr
         for (map in elementsWithExpression) {
             println("\nFucked up Strings with "+ map.key)
             for(element in map.value){
-                println(element.toString())
+                val list = findReferences(element.parent)
+                for (l in list){
+                    for(ref in l.references){
+                        println(ref.element.text)
+                    }
+                }
             }
         }
     }
@@ -76,8 +81,28 @@ class SqlInjectionDetectionAction : AnAction() {
         }else if(type == "REFERENCE_EXPRESSION"){
             concatReferenceExpr()
         }else if(type == "ASSIGNMENT_STATEMENT"){
-            concaAssignmentStatement() //fString
+            concatAssignmentStatement(element) //fString
         }
+    }
+
+    private fun findReferences(element: PsiElement) : MutableList<PsiElement>{
+        val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
+        return findReferences(element, list);
+    }
+    private fun findReferences(element: PsiElement, list : MutableList<PsiElement>) : MutableList<PsiElement>{
+        //special case for fString
+        if(element.elementType.toString().contains("REFERENCE_EXPRESSION"))
+        {
+            return findReferences(element.nextSibling);
+        }
+
+        for (children in element.children){
+            if(children.elementType.toString().contains("REFERENCE_EXPRESSION"))
+                list.add(children)
+            if(children.children.isNotEmpty())
+                list += findReferences(children)
+        }
+        return list
     }
 
     private fun concatReferenceExpr() {
@@ -88,8 +113,8 @@ class SqlInjectionDetectionAction : AnAction() {
         TODO("Not yet implemented")
     }
 
-    private fun concaAssignmentStatement() {
-        TODO("Not yet implemented")
+    private fun concatAssignmentStatement(element: PsiElement) {
+
     }
 
 
