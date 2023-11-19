@@ -1,6 +1,9 @@
 package com.github.renttrent.jetbrainsdbsecurity.actions
 
 import com.github.renttrent.jetbrainsdbsecurity.services.SQLParserUtil
+import com.github.renttrent.jetbrainsdbsecurity.services.WarningSeverity
+import com.github.renttrent.jetbrainsdbsecurity.services.isSqlVulnerable
+import com.github.renttrent.jetbrainsdbsecurity.services.isValidSqlNaive
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Document
@@ -18,10 +21,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
-import com.intellij.smartUpdate.beforeRestart
 import com.intellij.ui.JBColor
 import java.awt.Font
-import java.text.MessageFormat
 import java.util.stream.Collectors
 
 class SqlInjectionDetectionAction : AnAction() {
@@ -62,43 +63,49 @@ class SqlInjectionDetectionAction : AnAction() {
             it.elementType.toString().contains("TARGET_EXPRESSION")
         }.collect(Collectors.toList())
 
-        val referenceExpressions = allElements.stream().filter {
-            it.elementType.toString().contains("REFERENCE_EXPRESSION")
-        }.collect(Collectors.toList())
-
-
         val pattern = "\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+".toRegex()
-        for (map in elementsWithExpression){
-            for (elem in map.value){
-                val list = findReferences(elem.parent)
-                val variableList : MutableList<String> = mutableListOf()
+        for (map in elementsWithExpression) {
+            for (elem in map.value) {
+                val (variableList: MutableList<String>, concatQuery) = concatLiteral(elem, targetElements, pattern)
 
-                for (refElem in list) {
-                        val value = findTargetReference(refElem.reference!!, targetElements) ?: break
-                    variableList += value
-                }
+                var validSql: Boolean = isValidSql(variableList, concatQuery)
 
-                // Replace function
-                val iterator = variableList.iterator()
-
-                // Replace function
-                val newText = removeQuotesAndF(pattern.replace(elem.text) {
-                    if (iterator.hasNext()) iterator.next() else it.value
-                })
-
-
-                if(variableList.contains("{}")){
-                    //SQLisVurnerable()
-                }
-                else
-                {
-                    if(SQLParserUtil().isValid(newText)){
-                        //SQLisVurnerable()ste
-                    }
+                if (!validSql) continue
+                val sqlVulnerable = isSqlVulnerable(concatQuery)
+                if(sqlVulnerable != WarningSeverity.OK){
+                    highlightElement(file,elem)
                 }
             }
         }
+    }
 
+    private fun isValidSql(variableList: MutableList<String>, concatQuery: String): Boolean {
+        var validSql: Boolean = false
+        validSql = if (variableList.contains("{}")) {
+            isValidSqlNaive(concatQuery)
+        } else {
+            SQLParserUtil().isValid(concatQuery)
+        }
+        return validSql
+    }
+
+    private fun concatLiteral(elem: PsiElement, targetElements: MutableList<PsiElement>, pattern: Regex): Pair<MutableList<String>, String> {
+        val list = findReferenceExpressions(elem.parent)
+        val variableList: MutableList<String> = mutableListOf()
+
+        for (refElem in list) {
+            val value = findTargetReference(refElem.reference!!, targetElements) ?: break
+            variableList += value
+        }
+
+        // Replace function
+        val iterator = variableList.iterator()
+
+        // Replace function
+        val concatQuery = removeQuotesAndF(pattern.replace(elem.text) {
+            if (iterator.hasNext()) iterator.next() else it.value
+        })
+        return Pair(variableList, concatQuery)
     }
 
     private fun removeQuotesAndF(input: String): String {
@@ -134,23 +141,23 @@ class SqlInjectionDetectionAction : AnAction() {
         return null
     }
 
-    private fun findReferences(element: PsiElement) : MutableList<PsiElement>{
+    private fun findReferenceExpressions(element: PsiElement) : MutableList<PsiElement>{
         val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
-        return findReferences(element, list);
+        return findReferenceExpressions(element, list);
     }
 
-    private fun findReferences(element: PsiElement, list : MutableList<PsiElement>) : MutableList<PsiElement>{
+    private fun findReferenceExpressions(element: PsiElement, list : MutableList<PsiElement>) : MutableList<PsiElement>{
         //special case for fString
         if(element.elementType.toString().contains("REFERENCE_EXPRESSION"))
         {
-            return findReferences(element.nextSibling);
+            return findReferenceExpressions(element.nextSibling);
         }
 
         for (children in element.children){
             if(children.elementType.toString().contains("REFERENCE_EXPRESSION"))
                 list.add(children)
             if(children.children.isNotEmpty())
-                list += findReferences(children)
+                list += findReferenceExpressions(children)
         }
         return list
     }
