@@ -11,15 +11,19 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.NlsSafe
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.smartUpdate.beforeRestart
 import com.intellij.ui.JBColor
 import java.awt.Font
-import java.util.Dictionary
+import java.text.MessageFormat
 import java.util.stream.Collectors
+
 class SqlInjectionDetectionAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
         val editor: Editor? = event.getData(com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR)
@@ -51,47 +55,105 @@ class SqlInjectionDetectionAction : AnAction() {
                             || (it.children.isNotEmpty() && it.children[0].elementType.toString().contains("FSTRING_NODE"))
                 }.collect(Collectors.toList())
 
-        val elementsWithNoExpression = allStringLiterals.stream()
-                .filter {
-                    !elementsToExclude.contains(it)
-                }.collect(Collectors.toList());
-
 
         val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
 
-        val dict : Dictionary<PsiElement, List<String>>
+        val targetElements = allElements.stream().filter {
+            it.elementType.toString().contains("TARGET_EXPRESSION")
+        }.collect(Collectors.toList())
 
-        //BinaryExpr
-        for (map in elementsWithExpression) {
-            println("\nFucked up Strings with "+ map.key)
-            for(element in map.value){
-                println(element.toString())
+        val referenceExpressions = allElements.stream().filter {
+            it.elementType.toString().contains("REFERENCE_EXPRESSION")
+        }.collect(Collectors.toList())
+
+
+        val pattern = "\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+".toRegex()
+        for (map in elementsWithExpression){
+            for (elem in map.value){
+                val list = findReferences(elem.parent)
+                val variableList : MutableList<String> = mutableListOf()
+
+                for (refElem in list) {
+                        val value = findTargetReference(refElem.reference!!, targetElements) ?: break
+                    variableList += value
+                }
+
+                // Replace function
+                val iterator = variableList.iterator()
+
+                // Replace function
+                val newText = removeQuotesAndF(pattern.replace(elem.text) {
+                    if (iterator.hasNext()) iterator.next() else it.value
+                })
+
+
+                if(variableList.contains("{}")){
+                    //SQLisVurnerable()
+                }
+                else
+                {
+                    if(SQLParserUtil().isValid(newText)){
+                        //SQLisVurnerable()ste
+                    }
+                }
             }
         }
+
     }
 
-    private fun parseStringsWithExpression(type: String, element: PsiElement){
-        if(type == "BINARY_EXPRESSION"){
-            concatBinaryExpr()
-        }else if(type == "REFERENCE_EXPRESSION"){
-            concatReferenceExpr()
-        }else if(type == "ASSIGNMENT_STATEMENT"){
-            concaAssignmentStatement() //fString
+    private fun removeQuotesAndF(input: String): String {
+        var result = input.removePrefix("f").removePrefix("F")
+
+        if ((result.startsWith("\"") && result.endsWith("\"")) || (result.startsWith("'") && result.endsWith("'"))) {
+            result = result.substring(1, result.length - 1)
         }
+
+        return result
     }
 
-    private fun concatReferenceExpr() {
-        TODO("Not yet implemented")
+    private fun findTargetReference(ref: PsiReference, targetElements: MutableList<PsiElement>): @NlsSafe String? {
+        val target = findReference(ref, targetElements)
+        if(target === null) return null
+        val parent = target.parent
+        return if(parent.children.last().elementType.toString().contains("STRING_LITERAL_EXPRESSION")) {
+            val originalString = parent.children.last().text
+            if (originalString.startsWith("\"") && originalString.endsWith("\"")) {
+                originalString.substring(1, originalString.length - 1)
+            } else {
+                originalString
+            }
+        } else "{}"
     }
 
-    private fun concatBinaryExpr() {
-        TODO("Not yet implemented")
+    private fun findReference(ref: PsiReference, targets: MutableList<PsiElement>): PsiElement? {
+        for (target in targets) {
+            if(ref.isReferenceTo(target)) {
+                return target
+            }
+        }
+        return null
     }
 
-    private fun concaAssignmentStatement() {
-        TODO("Not yet implemented")
+    private fun findReferences(element: PsiElement) : MutableList<PsiElement>{
+        val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
+        return findReferences(element, list);
     }
 
+    private fun findReferences(element: PsiElement, list : MutableList<PsiElement>) : MutableList<PsiElement>{
+        //special case for fString
+        if(element.elementType.toString().contains("REFERENCE_EXPRESSION"))
+        {
+            return findReferences(element.nextSibling);
+        }
+
+        for (children in element.children){
+            if(children.elementType.toString().contains("REFERENCE_EXPRESSION"))
+                list.add(children)
+            if(children.children.isNotEmpty())
+                list += findReferences(children)
+        }
+        return list
+    }
 
     private fun highlightElement(file: PsiFile, element: PsiElement){
         val elementOffset = element.textOffset
@@ -103,7 +165,7 @@ class SqlInjectionDetectionAction : AnAction() {
         val document = psiDocumentManager.getDocument(file) ?: return
         val markupModel = DocumentMarkupModel.forDocument(document, project, true)
 
-        val lineNumber = document.getLineNumber(elementOffset)
+        //val lineNumber = document.getLineNumber(elementOffset)
         //val lineStartOffset = document.getLineStartOffset(lineNumber)
         //val columnNumber = element.textOffset - lineStartOffset
 
@@ -111,7 +173,7 @@ class SqlInjectionDetectionAction : AnAction() {
                 elementOffset,
                 elementOffset + element.textLength,
                 HighlighterLayer.WARNING,
-                TextAttributes(null, JBColor.LIGHT_GRAY, JBColor.YELLOW, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
+                TextAttributes(null, null, JBColor.ORANGE, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
