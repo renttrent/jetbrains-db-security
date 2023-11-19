@@ -1,5 +1,6 @@
 package com.github.renttrent.jetbrainsdbsecurity.actions
 
+import com.github.renttrent.jetbrainsdbsecurity.services.SQLParserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Document
@@ -66,7 +67,7 @@ class SqlInjectionDetectionAction : AnAction() {
         }.collect(Collectors.toList())
 
 
-
+        val pattern = "\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+".toRegex()
         for (map in elementsWithExpression){
             for (elem in map.value){
                 val list = findReferences(elem.parent)
@@ -77,10 +78,6 @@ class SqlInjectionDetectionAction : AnAction() {
                     variableList += value
                 }
 
-                //val str = MessageFormat.format(elem.text, concatList)
-                // Regex pattern to match placeholders
-                val pattern = "\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+".toRegex()
-
                 // Replace function
                 val iterator = variableList.iterator()
 
@@ -89,14 +86,15 @@ class SqlInjectionDetectionAction : AnAction() {
                     if (iterator.hasNext()) iterator.next() else it.value
                 })
 
-                println(newText)
 
                 if(variableList.contains("{}")){
-
+                    //SQLisVurnerable()
                 }
                 else
                 {
-
+                    if(SQLParserUtil().isValid(newText)){
+                        //SQLisVurnerable()ste
+                    }
                 }
             }
         }
@@ -136,8 +134,6 @@ class SqlInjectionDetectionAction : AnAction() {
         return null
     }
 
-
-
     private fun findReferences(element: PsiElement) : MutableList<PsiElement>{
         val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
         return findReferences(element, list);
@@ -159,19 +155,6 @@ class SqlInjectionDetectionAction : AnAction() {
         return list
     }
 
-    private fun concatReferenceExpr() {
-        TODO("Not yet implemented")
-    }
-
-    private fun concatBinaryExpr() {
-        TODO("Not yet implemented")
-    }
-
-    private fun concatAssignmentStatement(element: PsiElement) {
-
-    }
-
-
     private fun highlightElement(file: PsiFile, element: PsiElement){
         val elementOffset = element.textOffset
 
@@ -182,7 +165,7 @@ class SqlInjectionDetectionAction : AnAction() {
         val document = psiDocumentManager.getDocument(file) ?: return
         val markupModel = DocumentMarkupModel.forDocument(document, project, true)
 
-        val lineNumber = document.getLineNumber(elementOffset)
+        //val lineNumber = document.getLineNumber(elementOffset)
         //val lineStartOffset = document.getLineStartOffset(lineNumber)
         //val columnNumber = element.textOffset - lineStartOffset
 
@@ -190,7 +173,7 @@ class SqlInjectionDetectionAction : AnAction() {
                 elementOffset,
                 elementOffset + element.textLength,
                 HighlighterLayer.WARNING,
-                TextAttributes(null, JBColor.LIGHT_GRAY, JBColor.YELLOW, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
+                TextAttributes(null, null, JBColor.ORANGE, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
