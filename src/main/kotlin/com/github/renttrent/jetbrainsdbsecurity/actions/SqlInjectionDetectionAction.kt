@@ -1,9 +1,6 @@
 package com.github.renttrent.jetbrainsdbsecurity.actions
 
-import com.github.renttrent.jetbrainsdbsecurity.services.SQLParserUtil
-import com.github.renttrent.jetbrainsdbsecurity.services.WarningSeverity
-import com.github.renttrent.jetbrainsdbsecurity.services.isSqlVulnerable
-import com.github.renttrent.jetbrainsdbsecurity.services.isValidSqlNaive
+import com.github.renttrent.jetbrainsdbsecurity.services.*
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Document
@@ -172,10 +169,11 @@ class SqlInjectionDetectionAction : AnAction() {
         val document = psiDocumentManager.getDocument(file) ?: return
         val markupModel = DocumentMarkupModel.forDocument(document, project, true)
 
-        //val lineNumber = document.getLineNumber(elementOffset)
-        //val lineStartOffset = document.getLineStartOffset(lineNumber)
-        //val columnNumber = element.textOffset - lineStartOffset
+        val lineNumber = document.getLineNumber(elementOffset)
+        val lineStartOffset = document.getLineStartOffset(lineNumber)
+        val columnNumber = element.textOffset - lineStartOffset
 
+        showNotification(project, "WARNING!", "element - " + element.text.toString() + " not valid form of query\n(${lineNumber}, ${columnNumber})")
         markupModel.addRangeHighlighter(
                 elementOffset,
                 elementOffset + element.textLength,
