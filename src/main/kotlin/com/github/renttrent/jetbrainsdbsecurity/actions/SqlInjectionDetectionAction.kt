@@ -13,15 +13,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.impl.PsiElementBase
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.ui.JBColor
 import java.awt.Font
+import java.util.Dictionary
 import java.util.stream.Collectors
-
 class SqlInjectionDetectionAction : AnAction() {
-
     override fun actionPerformed(event: AnActionEvent) {
         val editor: Editor? = event.getData(com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR)
         if (editor != null) {
@@ -36,26 +34,61 @@ class SqlInjectionDetectionAction : AnAction() {
         }
     }
 
-    fun detectSqlInjection(file: PsiFile) {
+    private fun detectSqlInjection(file: PsiFile) {
         val allElements = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
-        val elementsWithNoExpression = allElements.stream().filter {
-            it.elementType.toString().contains("STRING_LITERAL_EXPRESSION") && !it.parent.elementType.toString().contains("BINARY_EXPRESSION")
-        }.collect(Collectors.toList())
 
-        val elementsWithExpression = allElements.stream().filter {
-            it.elementType.toString().contains("STRING_LITERAL_EXPRESSION") && it.parent.elementType.toString().contains("BINARY_EXPRESSION")
-        }.collect(Collectors.toList())
+        val allStringLiterals = allElements
+                .stream()
+                .filter {
+                    it.elementType.toString().contains("STRING_LITERAL_EXPRESSION")
+                }.collect(Collectors.toList())
 
+        val elementsToExclude = allStringLiterals
+                .stream().filter {
+                    it.parent.elementType.toString().contains("BINARY_EXPRESSION")
+                            || it.parent.elementType.toString().contains("REFERENCE_EXPRESSION")
+                            || (it.children.isNotEmpty() && it.children[0].elementType.toString().contains("FSTRING_NODE"))
+                }.collect(Collectors.toList())
+
+        val elementsWithNoExpression = allStringLiterals.stream()
+                .filter {
+                    !elementsToExclude.contains(it)
+                }.collect(Collectors.toList());
+
+
+        val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
+
+        val dict : Dictionary<PsiElement, List<String>>
+
+
+        println("Normal Strings")
+        //Normal Strings
         for (element in elementsWithNoExpression) {
-//            println(element)
-            highlightElement(file, element)
+            println(element.toString())
+
+            //TODO: Send strings to parser
         }
 
-        for (element in elementsWithExpression) {
-//            println(element)
-//            TODO
+
+        //BinaryExpr
+        for (map in elementsWithExpression) {
+            println("\nFucked up Strings with "+ map.key)
+            for(element in map.value){
+                println(element.toString())
+            }
         }
     }
+
+    private fun parseStringsWithExpression(type: String, string: String){
+        if(type == "BINARY_EXPRESSION"){
+        //TODO
+        }else if(type == "REFERENCE_EXPRESSION"){
+        //TODO
+        }else if(type == "ASSIGNMENT_STATEMENT"){
+        //TODO
+        }
+    }
+
 
     private fun highlightElement(file: PsiFile, element: PsiElement){
         val elementOffset = element.textOffset
@@ -75,7 +108,7 @@ class SqlInjectionDetectionAction : AnAction() {
                 elementOffset,
                 elementOffset + element.textLength,
                 HighlighterLayer.WARNING,
-                TextAttributes(null, null, JBColor.YELLOW, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
+                TextAttributes(null, JBColor.LIGHT_GRAY, JBColor.YELLOW, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
