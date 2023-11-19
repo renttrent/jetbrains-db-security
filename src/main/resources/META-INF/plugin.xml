@@ -8,8 +8,12 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Sql Injection Notification" displayType="BALLOON" />
+        
         <fileDocumentManagerListener implementation="com.github.renttrent.jetbrainsdbsecurity.listeners.SaveListener"/>
     </extensions>
+
+
 
     <actions>
         <action id="com.github.renttrent.jetbrainsdbsecurity.actions.SqlInjectionDetectionAllFilesAction"
