@@ -12,7 +12,7 @@ This plugin strives to be that missing component: actively check the composition
 about potential SQL-injections.
 
 ## Usage
-The usage is simple: load the module, and if you do anything that looks like an injection, the plugin will warn you!
+The usage is simple: load the module, and if you do anything that looks like an injection, the plugin will inform you!
 
 ## Use cases
 
@@ -141,4 +141,12 @@ If code is structured in such a way that string concatenations for queries often
 this may indicate that the database created by the programmer is violating some SQL design guidelines.
 
 A possible future extension could be to somehow inform the user about design principles of database 
-if a user's queries depict dubious SQL.  
+if a user's queries depict dubious SQL.
+
+#### Tight integration with JetBrains' (paid) SQL support
+The professional (paid) versions of JetBrains IDEs have a rather deep integration with most database systems. 
+For example, syntax is automatically highlighted, the SQL dialect can be chosen, and the IDE can even use the schema of the database to determine whether the programming might be making a mistake with naming.
+
+Due to reasons beyond our control, it has not been possible yet to combine this functionality with our plugin.
+However, it would obviously be a great benefit for users if the "database experience" in their IDE is harmonised!
+SQL-injections are very impactful, and in our opinions IDEs should make it as easy as possible to guard against them.
