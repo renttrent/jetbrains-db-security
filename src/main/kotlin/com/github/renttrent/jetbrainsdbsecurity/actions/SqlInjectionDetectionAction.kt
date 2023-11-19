@@ -10,17 +10,16 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.NlsSafe
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.ui.JBColor
-import com.intellij.ui.render.LabelBasedRenderer
 import java.awt.Font
-import java.util.Dictionary
 import java.util.stream.Collectors
-import javax.lang.model.element.Element
 
 class SqlInjectionDetectionAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
@@ -59,20 +58,42 @@ class SqlInjectionDetectionAction : AnAction() {
                 }.collect(Collectors.toList());
 
 
-        val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
+//        val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
+
+        val targetElements = allElements.stream().filter {
+            it.elementType.toString().contains("TARGET_EXPRESSION")
+        }.collect(Collectors.toList())
+
+        val referenceExpressions = allElements.stream().filter {
+            it.elementType.toString().contains("REFERENCE_EXPRESSION")
+        }.collect(Collectors.toList())
 
         //BinaryExpr
-        for (map in elementsWithExpression) {
-            println("\nFucked up Strings with "+ map.key)
-            for(element in map.value){
-                val list = findReferences(element.parent)
-                for (l in list){
-                    for(ref in l.references){
-                        println(ref.element.text)
-                    }
-                }
+        for (elem in referenceExpressions) {
+            for(ref in elem.references) {
+                val value = findTargetReference(ref, targetElements)
+                print(ref.element.text + " - ")
+                println(value)
+            }
+
+        }
+    }
+
+    private fun findTargetReference(ref: PsiReference, targetElements: MutableList<PsiElement>): @NlsSafe String? {
+        val target = findReference(ref, targetElements)
+        if(target === null) return null
+        val parent = target.parent
+        return if(parent.children.last().elementType.toString().contains("STRING_LITERAL_EXPRESSION")) parent.children.last().text
+        else "{}"
+    }
+
+    private fun findReference(ref: PsiReference, targets: MutableList<PsiElement>): PsiElement? {
+        for (target in targets) {
+            if(ref.isReferenceTo(target)) {
+                return target
             }
         }
+        return null
     }
 
     private fun parseStringsWithExpression(type: String, element: PsiElement){
@@ -89,6 +110,7 @@ class SqlInjectionDetectionAction : AnAction() {
         val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
         return findReferences(element, list);
     }
+
     private fun findReferences(element: PsiElement, list : MutableList<PsiElement>) : MutableList<PsiElement>{
         //special case for fString
         if(element.elementType.toString().contains("REFERENCE_EXPRESSION"))
