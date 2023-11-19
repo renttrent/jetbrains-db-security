@@ -79,14 +79,17 @@ class SqlInjectionDetectionAction : AnAction() {
 
                 //val str = MessageFormat.format(elem.text, concatList)
                 // Regex pattern to match placeholders
-                val pattern = "/\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+/gmi".toRegex()
+                val pattern = "\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+".toRegex()
 
                 // Replace function
                 val iterator = variableList.iterator()
 
                 // Replace function
-                val newText = pattern.replace(elem.text) {
-                }
+                val newText = removeQuotesAndF(pattern.replace(elem.text) {
+                    if (iterator.hasNext()) iterator.next() else it.value
+                })
+
+                println(newText)
 
                 if(variableList.contains("{}")){
 
@@ -95,18 +98,33 @@ class SqlInjectionDetectionAction : AnAction() {
                 {
 
                 }
-                println(newText)
             }
         }
 
+    }
+
+    private fun removeQuotesAndF(input: String): String {
+        var result = input.removePrefix("f").removePrefix("F")
+
+        if ((result.startsWith("\"") && result.endsWith("\"")) || (result.startsWith("'") && result.endsWith("'"))) {
+            result = result.substring(1, result.length - 1)
+        }
+
+        return result
     }
 
     private fun findTargetReference(ref: PsiReference, targetElements: MutableList<PsiElement>): @NlsSafe String? {
         val target = findReference(ref, targetElements)
         if(target === null) return null
         val parent = target.parent
-        return if(parent.children.last().elementType.toString().contains("STRING_LITERAL_EXPRESSION")) parent.children.last().text
-        else "{}"
+        return if(parent.children.last().elementType.toString().contains("STRING_LITERAL_EXPRESSION")) {
+            val originalString = parent.children.last().text
+            if (originalString.startsWith("\"") && originalString.endsWith("\"")) {
+                originalString.substring(1, originalString.length - 1)
+            } else {
+                originalString
+            }
+        } else "{}"
     }
 
     private fun findReference(ref: PsiReference, targets: MutableList<PsiElement>): PsiElement? {
