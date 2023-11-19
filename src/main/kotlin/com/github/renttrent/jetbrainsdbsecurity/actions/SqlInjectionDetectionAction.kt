@@ -180,7 +180,7 @@ class SqlInjectionDetectionAction : AnAction() {
                 elementOffset,
                 elementOffset + element.textLength,
                 HighlighterLayer.WARNING,
-                TextAttributes(null, null, JBColor.ORANGE, EffectType.WAVE_UNDERSCORE, Font.PLAIN),
+                TextAttributes(null, null, JBColor.ORANGE, EffectType.ROUNDED_BOX, Font.ITALIC),
                 HighlighterTargetArea.EXACT_RANGE
         )
     }
