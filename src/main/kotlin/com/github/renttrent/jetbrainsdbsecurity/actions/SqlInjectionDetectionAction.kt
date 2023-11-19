@@ -173,7 +173,7 @@ class SqlInjectionDetectionAction : AnAction() {
         val lineStartOffset = document.getLineStartOffset(lineNumber)
         val columnNumber = element.textOffset - lineStartOffset
 
-        showNotification(project, "WARNING!", "element - " + element.text.toString() + " not valid form of query\n(${lineNumber}, ${columnNumber})")
+        showNotification(project, "WARNING!", "(${lineNumber}, ${columnNumber}) Element - " + element.text.toString() + " not valid form of query")
         markupModel.addRangeHighlighter(
                 elementOffset,
                 elementOffset + element.textLength,
