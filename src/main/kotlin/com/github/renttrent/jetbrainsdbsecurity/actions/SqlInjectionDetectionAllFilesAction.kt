@@ -13,8 +13,6 @@ class SqlInjectionDetectionAllFilesAction : AnAction() {
         val project = event.project ?: return
         val pythonFiles = FileTypeIndex.getFiles(FileTypeManager.getInstance().findFileTypeByName("Python"), GlobalSearchScope.projectScope(project))
 
-        ParserTest().test()
-
         for (file in pythonFiles) {
             // double check
             if (isPythonFile(file)) {

@@ -1,5 +1,6 @@
 package com.github.renttrent.jetbrainsdbsecurity.actions
 
+import com.github.renttrent.jetbrainsdbsecurity.services.SQLParserUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.editor.Document
@@ -34,7 +35,7 @@ class SqlInjectionDetectionAction : AnAction() {
         }
     }
 
-    private fun detectSqlInjection(file: PsiFile) {
+    fun detectSqlInjection(file: PsiFile) {
         val allElements = PsiTreeUtil.findChildrenOfType(file, PsiElement::class.java)
 
         val allStringLiterals = allElements
@@ -60,16 +61,6 @@ class SqlInjectionDetectionAction : AnAction() {
 
         val dict : Dictionary<PsiElement, List<String>>
 
-
-        println("Normal Strings")
-        //Normal Strings
-        for (element in elementsWithNoExpression) {
-            println(element.toString())
-
-            //TODO: Send strings to parser
-        }
-
-
         //BinaryExpr
         for (map in elementsWithExpression) {
             println("\nFucked up Strings with "+ map.key)
@@ -79,14 +70,26 @@ class SqlInjectionDetectionAction : AnAction() {
         }
     }
 
-    private fun parseStringsWithExpression(type: String, string: String){
+    private fun parseStringsWithExpression(type: String, element: PsiElement){
         if(type == "BINARY_EXPRESSION"){
-        //TODO
+            concatBinaryExpr()
         }else if(type == "REFERENCE_EXPRESSION"){
-        //TODO
+            concatReferenceExpr()
         }else if(type == "ASSIGNMENT_STATEMENT"){
-        //TODO
+            concaAssignmentStatement() //fString
         }
+    }
+
+    private fun concatReferenceExpr() {
+        TODO("Not yet implemented")
+    }
+
+    private fun concatBinaryExpr() {
+        TODO("Not yet implemented")
+    }
+
+    private fun concaAssignmentStatement() {
+        TODO("Not yet implemented")
     }
 
 
