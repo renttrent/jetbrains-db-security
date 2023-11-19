@@ -13,6 +13,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.impl.PsiElementBase
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.ui.JBColor
@@ -46,12 +47,13 @@ class SqlInjectionDetectionAction : AnAction() {
         }.collect(Collectors.toList())
 
         for (element in elementsWithNoExpression) {
-            println(element)
+//            println(element)
             highlightElement(file, element)
         }
 
         for (element in elementsWithExpression) {
-            println(element)
+//            println(element)
+//            TODO
         }
     }
 
