@@ -17,8 +17,10 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.smartUpdate.beforeRestart
 import com.intellij.ui.JBColor
 import java.awt.Font
+import java.text.MessageFormat
 import java.util.stream.Collectors
 
 class SqlInjectionDetectionAction : AnAction() {
@@ -52,13 +54,8 @@ class SqlInjectionDetectionAction : AnAction() {
                             || (it.children.isNotEmpty() && it.children[0].elementType.toString().contains("FSTRING_NODE"))
                 }.collect(Collectors.toList())
 
-        val elementsWithNoExpression = allStringLiterals.stream()
-                .filter {
-                    !elementsToExclude.contains(it)
-                }.collect(Collectors.toList());
 
-
-//        val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
+        val elementsWithExpression = elementsToExclude.stream().collect(Collectors.groupingBy { x-> x.parent.elementType.toString() })
 
         val targetElements = allElements.stream().filter {
             it.elementType.toString().contains("TARGET_EXPRESSION")
@@ -68,15 +65,40 @@ class SqlInjectionDetectionAction : AnAction() {
             it.elementType.toString().contains("REFERENCE_EXPRESSION")
         }.collect(Collectors.toList())
 
-        //BinaryExpr
-        for (elem in referenceExpressions) {
-            for(ref in elem.references) {
-                val value = findTargetReference(ref, targetElements)
-                print(ref.element.text + " - ")
-                println(value)
-            }
 
+
+        for (map in elementsWithExpression){
+            for (elem in map.value){
+                val list = findReferences(elem.parent)
+                val variableList : MutableList<String> = mutableListOf()
+
+                for (refElem in list) {
+                        val value = findTargetReference(refElem.reference!!, targetElements) ?: break
+                    variableList += value
+                }
+
+                //val str = MessageFormat.format(elem.text, concatList)
+                // Regex pattern to match placeholders
+                val pattern = "/\\{[\\w\\d]*\\}|\\{(.*?)\\}|%\\w+/gmi".toRegex()
+
+                // Replace function
+                val iterator = variableList.iterator()
+
+                // Replace function
+                val newText = pattern.replace(elem.text) {
+                }
+
+                if(variableList.contains("{}")){
+
+                }
+                else
+                {
+
+                }
+                println(newText)
+            }
         }
+
     }
 
     private fun findTargetReference(ref: PsiReference, targetElements: MutableList<PsiElement>): @NlsSafe String? {
@@ -96,15 +118,7 @@ class SqlInjectionDetectionAction : AnAction() {
         return null
     }
 
-    private fun parseStringsWithExpression(type: String, element: PsiElement){
-        if(type == "BINARY_EXPRESSION"){
-            concatBinaryExpr()
-        }else if(type == "REFERENCE_EXPRESSION"){
-            concatReferenceExpr()
-        }else if(type == "ASSIGNMENT_STATEMENT"){
-            concatAssignmentStatement(element) //fString
-        }
-    }
+
 
     private fun findReferences(element: PsiElement) : MutableList<PsiElement>{
         val list : MutableList<PsiElement> = mutableListOf<PsiElement>()
